@@ -3,7 +3,7 @@
 const fs = require('fs');
 
 if (process.argv.length < 3) {
-    console.log('usage: node client.js <command> [args]');
+    console.log('usage: tini <command> [args]');
     process.exit(1);
 }
 
