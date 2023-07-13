@@ -10,34 +10,14 @@ if (process.argv.length < 3) {
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
-const commands = ["download", "meta"];
 
-if (!commands.includes(command)) {
-    console.log('unknown command');
-    process.exit(1);
-}
-
-const url = 'http://localhost:3000/' + command + '?name=' + args[0];
-
+const base = 'http://n2.proxied.host:25515/';
 
 const _name = args[0];
 
 if (!_name) {
     console.log('missing name');
     process.exit(1);
-}
-
-switch (command) {
-    case 'i':
-    case 'install':
-    case 'download':
-        installDep(url);
-        break;
-    case 'meta':
-        metaDep(url);
-        break;
-    default:
-        throw new Error('[tin:pkg] Unknown command received: ' + command); 
 }
 
 function metaDep(url) {
@@ -63,7 +43,9 @@ function installDep(url, logs = true) {
         }
     }
 
-    fetch(url).then(r => r.json().then(x => {
+    fetch(url, { headers: { 
+        "Content-Type": "application/json"
+    }}).then(r => r.json().then(x => {
         if (!x.ok) {
             console.log(x.error);
             process.exit(1);
@@ -96,11 +78,29 @@ function installDep(url, logs = true) {
 
         if (Object.keys(x.meta?.deps || {}).length !== 0) {
             Object.keys(x.meta?.deps || {}).forEach((name) => {
-                installDep('http://localhost:3000/download?name=' + name, false);
+                installDep(base + 'download?name=' + name, false);
             });
         }
 
         if (logs)
             console.log('[tin:pkg] Installed ' + _name + ' successfully')
     }));
+}
+
+
+switch (command) {
+    case 'i':
+    case 'install':
+    case 'download':
+        const _url = base + 'download?name=' + encodeURIComponent(args[0]);
+        installDep(_url);
+        break;
+    case 'm':
+    case 'info':
+    case 'meta':
+        const url_ = base + 'meta?name=' + encodeURIComponent(args[0]);
+        metaDep(url_);
+        break;
+    default:
+        throw new Error('[tin:pkg] Unknown command received: ' + command); 
 }
